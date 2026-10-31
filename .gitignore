@@ -1,0 +1,50 @@
+# =============================================================================
+# ROMs y Archivos Binarios con Copyright (NUNCA subir al repositorio)
+# =============================================================================
+*.gba
+*.GBA
+*.sav
+*.srm
+*.ss*
+buusfury-disasm/baserom.gba
+buusfury-disasm/baserom.gba*
+buusfury-disasm/image.gba
+
+# =============================================================================
+# Assets y Stores Extraídos de la ROM por buusfury-disasm
+# (Se regeneran automáticamente ejecutando Instalar_y_Extraer_ROM.bat)
+# =============================================================================
+buusfury-disasm/build/
+buusfury-disasm/tools/compress/build/
+buusfury-disasm/tools/compress/compress.exe
+buusfury-disasm/assets/tilebank/
+buusfury-disasm/assets/generated/
+buusfury-disasm/assets/mapcontainer/
+buusfury-disasm/assets/spritecontainer/
+buusfury-disasm/assets/endrom/
+buusfury-disasm/assets/assetdir/
+buusfury-disasm/assets/assetdir3/
+buusfury-disasm/assets/assetdirrecords/
+buusfury-disasm/assets/endromrecords/
+buusfury-disasm/assets/maprecords/
+buusfury-disasm/assets/spriterecords/
+buusfury-disasm/assets/structured/
+buusfury-disasm/assets/jcalg1/
+buusfury-disasm/asm/*.extracted
+buusfury-disasm/data/*.extracted
+buusfury-disasm/work/rebuild.log
+buusfury-disasm/work/perturb-base.gba
+buusfury-disasm/work/snapshot/
+buusfury-disasm/logs/
+buusfury-disasm/objdiff.json
+
+# =============================================================================
+# Entorno Python / Temporales
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+editor/project_edits.json

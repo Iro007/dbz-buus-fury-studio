@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DBZ: Buu's Fury Studio — Editor de Mapas, Personajes y Eventos</title>
+  <style>
+    :root {
+      --bg-0: #0b0e14;
+      --bg-1: #121722;
+      --bg-2: #192030;
+      --bg-3: #232d42;
+      --border: #2c3852;
+      --text: #e6edf3;
+      --muted: #8b9bb4;
+      --accent: #ff7b00;
+      --accent-hover: #ff9838;
+      --blue: #38bdf8;
+      --green: #22c55e;
+      --purple: #a855f7;
+      --red: #ef4444;
+      --yellow: #eab308;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    /* Top Header */
+    header {
+      background: linear-gradient(90deg, #131926 0%, #1d1522 50%, #131926 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: radial-gradient(circle at 30% 30%, #ffb703, #fb8500 60%, #d62828);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 16px;
+      box-shadow: 0 0 12px rgba(255, 123, 0, 0.45);
+    }
+    .brand h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .brand small {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+    }
+    .nav-tab {
+      background: var(--bg-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .nav-tab:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+    .nav-tab.active {
+      background: rgba(255, 123, 0, 0.16);
+      color: #ffa94d;
+      border-color: var(--accent);
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn {
+      background: var(--bg-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn:hover { border-color: var(--blue); background: var(--bg-3); }
+    .btn-primary {
+      background: var(--accent);
+      color: #0b0e14;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-success {
+      background: rgba(34, 197, 94, 0.18);
+      color: #4ade80;
+      border-color: #22c55e;
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: #ef4444;
+    }
+    /* Main Workspace Views */
+    .tab-view {
+      display: none;
+      flex: 1;
+      overflow: hidden;
+    }
+    .tab-view.active {
+      display: flex;
+    }
+    /* Sidebars & Panels */
+    .sidebar-left {
+      width: 280px;
+      background: var(--bg-1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-right {
+      width: 350px;
+      background: var(--bg-1);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+    .panel-header {
+      padding: 10px 12px;
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .search-box {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    input[type="text"], input[type="number"], select, textarea {
+      background: var(--bg-0);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 6px 8px;
+      font-size: 12px;
+      width: 100%;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .list-scroll {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .list-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(44, 56, 82, 0.45);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .list-item:hover { background: var(--bg-2); }
+    .list-item.active {
+      background: rgba(255, 123, 0, 0.16);
+      border-left: 3px solid var(--accent);
+    }
+    .badge {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--bg-3);
+      color: var(--muted);
+    }
+    .badge-enemy { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .badge-warp { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; }
+    .badge-npc { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; }
+
+    /* Center Map Canvas Area */
+    .center-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #07090e;
+      overflow: hidden;
+    }
+    .toolbar {
+      padding: 8px 12px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-0);
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .tool-btn {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      padding: 5px 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tool-btn:hover { color: var(--text); }
+    .tool-btn.active {
+      background: var(--accent);
+      color: #0b0e14;
+    }
+    .layer-toggles {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .layer-toggles label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--muted);
+    }
+    .layer-toggles input:checked + span {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .canvas-viewport {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      box-shadow: 0 0 24px rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--border);
+      background: #000;
+      cursor: crosshair;
+    }
+    .status-bar {
+      padding: 5px 12px;
+      background: var(--bg-1);
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Inspector Form Controls */
+    .inspector-section {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .inspector-section h3 {
+      font-size: 12px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .form-field.full {
+      grid-column: 1 / -1;
+    }
+    .form-field label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .sprite-preview-box {
+      background: #07090e;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 76px;
+      gap: 10px;
+    }
+    .sprite-preview-box img {
+      image-rendering: pixelated;
+      max-height: 64px;
+      transform: scale(1.75);
+      transform-origin: center;
+    }
+
+    /* Sprite Grid & Enemy Table in Tab 2 */
+    .sprite-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+      gap: 8px;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    .sprite-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      min-height: 92px;
+      justify-content: space-between;
+    }
+    .sprite-card:hover, .sprite-card.active {
+      border-color: var(--accent);
+      background: rgba(255, 123, 0, 0.12);
+    }
+    .sprite-card img {
+      image-rendering: pixelated;
+      max-width: 56px;
+      max-height: 56px;
+    }
+    .sprite-card span {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg-3);
+      color: var(--text);
+      border-left: 4px solid var(--green);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      display: none;
+      z-index: 9999;
+    }
+    .code-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+    }
+    .code-table th, .code-table td {
+      padding: 5px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .code-table th {
+      color: var(--muted);
+      background: var(--bg-2);
+      position: sticky;
+      top: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">Z</div>
+      <div>
+        <h1>DBZ: Buu's Fury Studio</h1>
+        <small id="rom-status-subtitle">Cargando datos de buusfury-disasm...</small>
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('map')">🗺️ Editor de Mapas y Niveles</button>
+      <button class="nav-tab" onclick="switchTab('chars')">🐉 Personajes, Sprites y Enemigos</button>
+      <button class="nav-tab" onclick="switchTab('events')">📜 Creador de Eventos y Diálogos</button>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="saveCurrentMap()">💾 Guardar Mapa Actual</button>
+      <button class="btn btn-success" onclick="exportModdedRom()">🎮 Exportar ROM (.gba)</button>
+    </div>
+  </header>
+
+  <!-- ==================================================================== -->
+  <!-- TAB 1: VISUAL MAP, CHARACTER PLACEMENT & TILE EDITOR                 -->
+  <!-- ==================================================================== -->
+  <div id="tab-map" class="tab-view active">
+    <!-- Left Map List -->
+    <div class="sidebar-left">
+      <div class="panel-header">
+        <span>Mapas (452)</span>
+        <span id="map-filter-count" class="badge">452</span>
+      </div>
+      <div class="search-box">
+        <input type="text" id="map-search" placeholder="Buscar mapa por ID, grupo o root..." oninput="renderMapList()" />
+        <select id="map-filter-type" onchange="renderMapList()">
+          <option value="all">Todos los mapas (452)</option>
+          <option value="placements">Con Personajes / Enemigos</option>
+          <option value="warps">Con Zonas Warp (Salidas)</option>
+        </select>
+      </div>
+      <div id="map-list" class="list-scroll"></div>
+    </div>
+
+    <!-- Center Map Canvas -->
+    <div class="center-stage">
+      <div class="toolbar">
+        <div class="tool-group">
+          <button class="tool-btn active" id="tool-select" onclick="setMapTool('select')">🖱️ Seleccionar / Mover</button>
+          <button class="tool-btn" id="tool-add-enemy" onclick="setMapTool('add_enemy')">➕ Agregar Enemigo</button>
+          <button class="tool-btn" id="tool-add-npc" onclick="setMapTool('add_npc')">➕ Agregar NPC / Evento</button>
+          <button class="tool-btn" id="tool-add-obj" onclick="setMapTool('add_obj')">➕ Agregar Objeto</button>
+          <button class="tool-btn" id="tool-paint" onclick="setMapTool('paint')">🖌️ Pintar Tiles</button>
+        </div>
+
+        <div class="layer-toggles">
+          <label><input type="checkbox" id="chk-bg0" checked onchange="redrawMapCanvas()" /><span>BG0</span></label>
+          <label><input type="checkbox" id="chk-bg1" checked onchange="redrawMapCanvas()" /><span>BG1</span></label>
+          <label><input type="checkbox" id="chk-bg2" checked onchange="redrawMapCanvas()" /><span>BG2</span></label>
+          <label><input type="checkbox" id="chk-bg3" checked onchange="redrawMapCanvas()" /><span>BG3</span></label>
+          <label><input type="checkbox" id="chk-grid" onchange="redrawMapCanvas()" /><span>Grid</span></label>
+          <label><input type="checkbox" id="chk-entities" checked onchange="redrawMapCanvas()" /><span>Personajes/Enemigos</span></label>
+          <label><input type="checkbox" id="chk-warps" checked onchange="redrawMapCanvas()" /><span>Warps</span></label>
+          <label><input type="checkbox" id="chk-triggers" checked onchange="redrawMapCanvas()" /><span>Triggers</span></label>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span>Zoom:</span>
+          <select id="map-zoom" style="width:72px;" onchange="updateMapZoom()">
+            <option value="1">100%</option>
+            <option value="1.5">150%</option>
+            <option value="2" selected>200%</option>
+            <option value="3">300%</option>
+          </select>
+          <span>Root:</span>
+          <select id="map-root-select" style="width:105px;" onchange="onChangeMapRoot()"></select>
+        </div>
+      </div>
+
+      <div class="canvas-viewport">
+        <canvas id="map-canvas" width="512" height="512"></canvas>
+      </div>
+
+      <div class="status-bar">
+        <span id="map-coords-status">Cursor: (0, 0) | Tile: (0, 0)</span>
+        <span id="map-info-status">Mapa #0</span>
+      </div>
+    </div>
+
+    <!-- Right Inspector Sidebar -->
+    <div class="sidebar-right">
+      <div class="panel-header">
+        <span>Inspector de Entidad / Mapa</span>
+        <span id="selected-badge" class="badge">Ninguno</span>
+      </div>
+
+      <div id="entity-inspector" class="inspector-section">
+        <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+          Haz clic sobre cualquier <b>Enemigo (rojo)</b>, <b>NPC/Evento (morado)</b>, <b>Objeto (amarillo)</b> o <b>Zona Warp (azul)</b> en el mapa para editar sus propiedades o arrastrarlo.<br/><br/>
+          O elige <b>➕ Agregar Enemigo</b> / <b>➕ Agregar NPC</b> en la barra superior y haz clic en el mapa para colocar nuevos personajes.
+        </p>
+      </div>
+
+      <!-- Paint Tile Palette Inspector -->
+      <div class="inspector-section">
+        <h3>
+          <span>Paleta de Tiles VRAM (8x8)</span>
+          <span id="vram-tile-label" class="badge">Tile #0</span>
+        </h3>
+        <div class="form-grid" style="margin-bottom:8px;">
+          <div class="form-field">
+            <label>Capa a Pintar</label>
+            <select id="paint-layer-select">
+              <option value="0">Capa BG0</option>
+              <option value="1">Capa BG1</option>
+              <option value="2">Capa BG2</option>
+              <option value="3">Capa BG3</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Flip al Pintar</label>
+            <div style="display:flex; gap:8px; padding-top:4px; font-size:12px;">
+              <label><input type="checkbox" id="paint-hflip" /> H-Flip</label>
+              <label><input type="checkbox" id="paint-vflip" /> V-Flip</label>
+            </div>
+          </div>
+        </div>
+        <div style="background:#07090e; border:1px solid var(--border); padding:6px; border-radius:6px; overflow:auto; max-height:280px; text-align:center;">
+          <canvas id="tileset-canvas" width="256" height="256" style="cursor:pointer;"></canvas>
+        </div>
+      </div>
+
+      <!-- Quick List of Map Entities -->
+      <div class="inspector-section">
+        <h3>Entidades en este Mapa</h3>
+        <div id="map-entities-list" style="display:flex; flex-direction:column; gap:4px; max-height:220px; overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- TAB 2: CHARACTERS, SPRITES (297) & ENEMY STATS (150)                 -->
+  <!-- ==================================================================== -->
+  <div id="tab-chars" class="tab-view">
+    <!-- Left: 297 Sprites Browser -->
+    <div style="width:45%; border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg-1);">
+      <div class="panel-header">
+        <span>Catálogo de 297 Definiciones de Sprites (0x6B6BDC)</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn" onclick="loadSpritesPage(-1)">◀ Ant</button>
+          <span id="sprite-page-label" class="badge">0 - 59</span>
+          <button class="btn" onclick="loadSpritesPage(1)">Sig ▶</button>
+        </div>
+      </div>
+      <div id="sprite-catalog-grid" class="sprite-grid" style="flex:1;"></div>
+
+      <!-- Selected Sprite Animation Viewer -->
+      <div id="sprite-detail-panel" class="inspector-section" style="background:var(--bg-2); border-top:1px solid var(--border);">
+        <h3>
+          <span id="sp-detail-title">Sprite #0</span>
+          <button class="btn btn-primary" onclick="sendSelectedSpriteToMap()">➕ Colocar este Sprite en el Mapa Actual</button>
+        </h3>
+        <div style="display:flex; gap:14px; align-items:center;">
+          <div class="sprite-preview-box" style="width:120px; height:110px;">
+            <img id="sp-anim-img" src="" alt="Sprite Preview" />
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Slot de Animación</label>
+                <select id="sp-slot-select" onchange="reloadSelectedSprite()"></select>
+              </div>
+              <div class="form-field">
+                <label>Dirección (0..3)</label>
+                <select id="sp-dir-select" onchange="reloadSelectedSprite()">
+                  <option value="0">0 — Sur / Abajo</option>
+                  <option value="1">1 — Norte / Arriba</option>
+                  <option value="2">2 — Oeste / Izquierda</option>
+                  <option value="3">3 — Este / Derecha</option>
+                </select>
+              </div>
+            </div>
+            <div id="sp-meta-info" style="font-size:11px; color:var(--muted);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: 150 Enemy Stats Editor -->
+    <div style="flex:1; display:flex; flex-direction:column; background:var(--bg-0);">
+      <div class="panel-header">
+        <span>Editor de Estadísticas de Enemigos y Jefes (150 Registros en 0x711274)</span>
+        <input type="text" id="enemy-search" placeholder="Filtrar por ID, HP o Mapa..." style="width:220px;" oninput="renderEnemiesTable()" />
+      </div>
+      <div style="flex:1; overflow-y:auto;">
+        <table class="code-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Offset</th>
+              <th>HP (Vida)</th>
+              <th>Ataque (w08)</th>
+              <th>Def / EXP (w0C)</th>
+              <th>Nivel/Tipo (w00)</th>
+              <th>Nodo IA (ai_node)</th>
+              <th>Sprites Usados</th>
+              <th>Mapas</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="enemies-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- TAB 3: EVENT CREATOR, DIALOGUES & SCRIPT BYTECODE                    -->
+  <!-- ==================================================================== -->
+  <div id="tab-events" class="tab-view">
+    <!-- Left: 522 Event Pool Records -->
+    <div class="sidebar-left" style="width:320px;">
+      <div class="panel-header">
+        <span>Pool de Eventos (522 en 0x77C5A4)</span>
+      </div>
+      <div class="search-box">
+        <input type="text" id="event-search" placeholder="Buscar por ID de evento o puntero 0x08..." oninput="renderEventsList()" />
+      </div>
+      <div id="event-list" class="list-scroll"></div>
+    </div>
+
+    <!-- Center: Event Detail & Custom Event Creator -->
+    <div style="flex:1; display:flex; flex-direction:column; border-right:1px solid var(--border); overflow-y:auto; background:var(--bg-0);">
+      <div class="panel-header">
+        <span id="ev-editor-title">Editor y Creador de Eventos</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-primary" onclick="saveCurrentEvent()">💾 Guardar Evento</button>
+          <button class="btn btn-success" onclick="cloneAsNewCustomEvent()">✨ Clonar como Nuevo Evento en ROM</button>
+        </div>
+      </div>
+
+      <div class="inspector-section">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>ID de Evento</label>
+            <input type="text" id="ev-id" readonly />
+          </div>
+          <div class="form-field">
+            <label>Puntero ROM (para asignar a NPC)</label>
+            <input type="text" id="ev-ptr" readonly />
+          </div>
+          <div class="form-field">
+            <label>Puntero Diálogo Principal (w[0])</label>
+            <input type="text" id="ev-dialog-ptr" />
+          </div>
+          <div class="form-field">
+            <label>Tipo de Diálogo / Tamaño</label>
+            <input type="text" id="ev-type-size" readonly />
+          </div>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn" onclick="assignEventToSelectedMapNpc()">🔗 Asignar este Puntero al NPC Seleccionado en el Mapa</button>
+        </div>
+      </div>
+
+      <div class="inspector-section" style="flex:1;">
+        <h3>Palabras de 32-bits del Evento (Punteros a Sub-Comandos / Textos / Flags)</h3>
+        <p style="font-size:11px; color:var(--muted); margin-bottom:8px;">
+          Edita las palabras hexadecimales (ej. <code>0x0877C510</code>) o reemplaza punteros a cadenas de texto del panel derecho.
+        </p>
+        <div id="ev-words-grid" class="form-grid" style="grid-template-columns: repeat(3, 1fr);"></div>
+      </div>
+
+      <!-- Map Script Bytecode Streams Disassembler -->
+      <div class="inspector-section">
+        <h3>
+          <span>Desensamblador de Scripts de Mapa (Bytecode 0x08004038)</span>
+          <select id="opcode-stream-select" style="width:220px;" onchange="renderSelectedOpcodeStream()"></select>
+        </h3>
+        <div style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:5px;">
+          <table class="code-table">
+            <thead>
+              <tr><th>Offset</th><th>Opcode</th><th>Mnemónico</th><th>Operandos</th></tr>
+            </thead>
+            <tbody id="opcode-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Game Strings Editor (UTF-16LE) -->
+    <div class="sidebar-right" style="width:420px;">
+      <div class="panel-header">
+        <span>Textos y Diálogos UTF-16LE (0x05792C)</span>
+      </div>
+      <div class="search-box">
+        <input type="text" id="string-search" placeholder="Buscar diálogo, personaje, misión, ítem..." oninput="searchStrings()" />
+      </div>
+      <div id="strings-list" class="list-scroll"></div>
+    </div>
+  </div>
+
+  <div id="toast">Guardado correctamente</div>
+
+  <script>
+    // =========================================================================
+    // STATE
+    // =========================================================================
+    let OVERVIEW = null;
+    let CURRENT_MAP_ID = 0;
+    let CURRENT_MAP = null;
+    let MAP_TOOL = 'select'; // select, add_enemy, add_npc, add_obj, paint
+    let SELECTED_ENTITY = null; // { kind: 'placement'|'warp'|'trigger'|'waypoint', index: number, parentIndex?: number }
+    let DRAGGING = false;
+    let PAINTING_TILES = false;
+    let SELECTED_VRAM_TILE = 1;
+    let PAINTED_CHUNKS_DIRTY = {}; // key: `${lslot}_${cidx}` -> { record_offset, chunk_index, entries }
+
+    let LAYER_IMAGES = {}; // slot -> HTMLImageElement
+    let TILESET_IMAGE = null;
+    let SPRITE_THUMB_CACHE = {}; // sprite_id -> HTMLImageElement
+
+    let SPRITE_PAGE_START = 0;
+    let SELECTED_SPRITE_ID = 0;
+    let SPRITE_ANIM_TIMER = null;
+    let SPRITE_ANIM_FRAMES = [];
+    let SPRITE_ANIM_IDX = 0;
+
+    let ALL_EVENTS = [];
+    let OPCODE_STREAMS = [];
+    let CURRENT_EVENT = null;
+
+    function showToast(msg, color = '#22c55e') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.style.borderLeftColor = color;
+      el.style.display = 'block';
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => { el.style.display = 'none'; }, 3200);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      const idx = { map: 0, chars: 1, events: 2 }[tab];
+      document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+
+      if (tab === 'chars' && Object.keys(SPRITE_THUMB_CACHE).length < 15) {
+        loadSpritesPage(0);
+        selectSpriteForViewer(SELECTED_SPRITE_ID);
+      }
+      if (tab === 'events' && ALL_EVENTS.length === 0) {
+        loadEventsAndStrings();
+      }
+    }
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    async function initApp() {
+      const res = await fetch('/api/overview');
+      OVERVIEW = await res.json();
+      const c = OVERVIEW.counts;
+      document.getElementById('rom-status-subtitle').textContent =
+        `${c.maps} Mapas • ${c.tilebanks} Tilebanks • ${c.sprites} Sprites • ${c.enemies} Enemigos • ${c.events} Eventos • ${c.strings} Textos`;
+
+      renderMapList();
+      renderEnemiesTable();
+
+      // Pick first map with placements or Map 0
+      const firstInteresting = OVERVIEW.maps.find(m => m.placement_count > 0 && m.warp_count > 0);
+      await loadMap(firstInteresting ? firstInteresting.id : 0);
+    }
+
+    // =========================================================================
+    // MAP LIST & LOADING
+    // =========================================================================
+    function renderMapList() {
+      const q = document.getElementById('map-search').value.trim().toLowerCase();
+      const filter = document.getElementById('map-filter-type').value;
+      const container = document.getElementById('map-list');
+
+      const filtered = OVERVIEW.maps.filter(m => {
+        if (filter === 'placements' && m.placement_count === 0) return false;
+        if (filter === 'warps' && m.warp_count === 0) return false;
+        if (!q) return true;
+        return (
+          String(m.id).includes(q) ||
+          `grupo ${m.group_id}`.includes(q) ||
+          (m.active_root && m.active_root.toLowerCase().includes(q))
+        );
+      });
+
+      document.getElementById('map-filter-count').textContent = filtered.length;
+      container.innerHTML = filtered.map(m => `
+        <div class="list-item ${m.id === CURRENT_MAP_ID ? 'active' : ''}" onclick="loadMap(${m.id})">
+          <div>
+            <strong>Mapa #${String(m.id).padStart(3, '0')}</strong>
+            <div style="font-size:10px; color:var(--muted);">
+              Cap.${m.group_id} • ${m.width_px}x${m.height_px}px • Root ${m.active_root || '-'}
+            </div>
+          </div>
+          <div style="display:flex; gap:4px;">
+            ${m.placement_count > 0 ? `<span class="badge badge-enemy" title="Personajes/Enemigos">👾 ${m.placement_count}</span>` : ''}
+            ${m.warp_count > 0 ? `<span class="badge badge-warp" title="Salidas Warp">🚪 ${m.warp_count}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadMap(mapId, rootOverride = null) {
+      CURRENT_MAP_ID = mapId;
+      SELECTED_ENTITY = null;
+      PAINTED_CHUNKS_DIRTY = {};
+      renderMapList();
+
+      const url = rootOverride ? `/api/map/${mapId}?root=${rootOverride}` : `/api/map/${mapId}`;
+      const res = await fetch(url);
+      CURRENT_MAP = await res.json();
+
+      // Populate Root selector
+      const rootSel = document.getElementById('map-root-select');
+      rootSel.innerHTML = CURRENT_MAP.summary.roots.map(r =>
+        `<option value="${r}" ${r === CURRENT_MAP.active_root ? 'selected' : ''}>${r}</option>`
+      ).join('');
+
+      // Load Layer Images
+      LAYER_IMAGES = {};
+      let maxW = 256, maxH = 256;
+      const loadPromises = [];
+
+      for (const layer of CURRENT_MAP.layers) {
+        if (layer.active && layer.png) {
+          maxW = Math.max(maxW, layer.width_px);
+          maxH = Math.max(maxH, layer.height_px);
+          loadPromises.push(new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => { LAYER_IMAGES[layer.slot] = img; resolve(); };
+            img.src = layer.png;
+          }));
+        }
+      }
+
+      // Load VRAM Tileset Image
+      if (CURRENT_MAP.tileset_png) {
+        loadPromises.push(new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => { TILESET_IMAGE = img; drawTilesetPalette(); resolve(); };
+          img.src = CURRENT_MAP.tileset_png;
+        }));
+      }
+
+      // Preload sprites for placements on this map
+      const uniqueSprites = [...new Set(CURRENT_MAP.placements.map(p => p.sprite_id).filter(s => s >= 0 && s < 297))];
+      for (const sid of uniqueSprites) {
+        if (!SPRITE_THUMB_CACHE[sid]) {
+          fetch(`/api/sprite/${sid}?slot=0&dir=0`).then(r => r.json()).then(sdata => {
+            if (sdata.frames && sdata.frames[0]) {
+              const img = new Image();
+              img.onload = () => { SPRITE_THUMB_CACHE[sid] = img; redrawMapCanvas(); };
+              img.src = sdata.frames[0].png;
+            }
+          });
+        }
+      }
+
+      await Promise.all(loadPromises);
+
+      const canvas = document.getElementById('map-canvas');
+      canvas.width = maxW;
+      canvas.height = maxH;
+      updateMapZoom();
+      redrawMapCanvas();
+      renderMapEntitiesList();
+      renderEntityInspector();
+
+      document.getElementById('map-info-status').textContent =
+        `Mapa #${mapId} (${CURRENT_MAP.summary.offset}) • Root ${CURRENT_MAP.active_root} • ${maxW}x${maxH}px • ${CURRENT_MAP.placements.length} Entidades • ${CURRENT_MAP.warps.length} Warps`;
+    }
+
+    function onChangeMapRoot() {
+      const rootHex = document.getElementById('map-root-select').value;
+      loadMap(CURRENT_MAP_ID, rootHex);
+    }
+
+    function updateMapZoom() {
+      const zoom = parseFloat(document.getElementById('map-zoom').value);
+      const canvas = document.getElementById('map-canvas');
+      canvas.style.width = (canvas.width * zoom) + 'px';
+      canvas.style.height = (canvas.height * zoom) + 'px';
+    }
+
+    function setMapTool(tool) {
+      MAP_TOOL = tool;
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      const mapBtn = {
+        select: 'tool-select',
+        add_enemy: 'tool-add-enemy',
+        add_npc: 'tool-add-npc',
+        add_obj: 'tool-add-obj',
+        paint: 'tool-paint'
+      }[tool];
+      if (mapBtn) document.getElementById(mapBtn).classList.add('active');
+    }
+
+    // =========================================================================
+    // CANVAS RENDERING & INTERACTION
+    // =========================================================================
+    function redrawMapCanvas() {
+      if (!CURRENT_MAP) return;
+      const canvas = document.getElementById('map-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. Draw BG0..BG3
+      for (let slot = 0; slot < 4; slot++) {
+        const chk = document.getElementById(`chk-bg${slot}`);
+        if (chk && chk.checked && LAYER_IMAGES[slot]) {
+          ctx.drawImage(LAYER_IMAGES[slot], 0, 0);
+        }
+      }
+
+      // 2. Draw Grid
+      if (document.getElementById('chk-grid').checked) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= canvas.width; x += 16) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = 0; y <= canvas.height; y += 16) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+        // Chunk 256x256 boundaries
+        ctx.strokeStyle = 'rgba(255, 123, 0, 0.35)';
+        for (let x = 0; x <= canvas.width; x += 256) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = 0; y <= canvas.height; y += 256) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+      }
+
+      // 3. Draw Warp Zones
+      if (document.getElementById('chk-warps').checked) {
+        CURRENT_MAP.warps.forEach((w, idx) => {
+          const isSel = SELECTED_ENTITY && SELECTED_ENTITY.kind === 'warp' && SELECTED_ENTITY.index === idx;
+          const rw = Math.max(12, w.x2 - w.x1);
+          const rh = Math.max(12, w.y2 - w.y1);
+          ctx.fillStyle = isSel ? 'rgba(56, 189, 248, 0.42)' : 'rgba(56, 189, 248, 0.22)';
+          ctx.strokeStyle = isSel ? '#ffffff' : '#38bdf8';
+          ctx.lineWidth = isSel ? 2 : 1.5;
+          ctx.fillRect(w.x1, w.y1, rw, rh);
+          ctx.strokeRect(w.x1, w.y1, rw, rh);
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 10px sans-serif';
+          ctx.fillText(`🚪→M${w.dest_map}`, w.x1 + 2, w.y1 + 10);
+        });
+      }
+
+      // 4. Draw Trigger Zones
+      if (document.getElementById('chk-triggers').checked) {
+        CURRENT_MAP.trigger_zones.forEach((tz, idx) => {
+          const isSel = SELECTED_ENTITY && SELECTED_ENTITY.kind === 'trigger' && SELECTED_ENTITY.index === idx;
+          const rw = Math.max(12, tz.x2 - tz.x1);
+          const rh = Math.max(12, tz.y2 - tz.y1);
+          ctx.fillStyle = isSel ? 'rgba(234, 179, 8, 0.40)' : 'rgba(234, 179, 8, 0.18)';
+          ctx.strokeStyle = isSel ? '#ffffff' : '#eab308';
+          ctx.lineWidth = isSel ? 2 : 1;
+          ctx.fillRect(tz.x1, tz.y1, rw, rh);
+          ctx.strokeRect(tz.x1, tz.y1, rw, rh);
+          ctx.fillStyle = '#fde047';
+          ctx.font = '10px sans-serif';
+          ctx.fillText(`⚡Trig#${idx}`, tz.x1 + 2, tz.y1 + 10);
+        });
+      }
+
+      // 5. Draw Placements (Enemies, NPCs, Objects) & Patrol Waypoints
+      if (document.getElementById('chk-entities').checked) {
+        CURRENT_MAP.placements.forEach((p, idx) => {
+          const isSel = SELECTED_ENTITY && SELECTED_ENTITY.kind === 'placement' && SELECTED_ENTITY.index === idx;
+
+          // Draw Patrol Waypoints for enemies
+          if (p.waypoints && p.waypoints.length > 0) {
+            ctx.strokeStyle = isSel ? '#ff9838' : 'rgba(239, 68, 68, 0.65)';
+            ctx.lineWidth = isSel ? 2 : 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            p.waypoints.forEach(wp => ctx.lineTo(wp.x, wp.y));
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            p.waypoints.forEach((wp, widx) => {
+              ctx.fillStyle = '#fb923c';
+              ctx.beginPath();
+              ctx.arc(wp.x, wp.y, 4, 0, Math.PI * 2);
+              ctx.fill();
+            });
+          }
+
+          // Draw Sprite if cached
+          const spImg = SPRITE_THUMB_CACHE[p.sprite_id];
+          if (spImg) {
+            ctx.drawImage(spImg, p.x - spImg.width / 2, p.y - spImg.height + 8);
+          }
+
+          // Marker Box
+          const color = p.type === 'enemy' ? '#ef4444' : (p.type === 'npc' ? '#a855f7' : '#eab308');
+          ctx.strokeStyle = isSel ? '#ffffff' : color;
+          ctx.lineWidth = isSel ? 2.5 : 1.5;
+          ctx.strokeRect(p.x - 10, p.y - 20, 20, 24);
+
+          ctx.fillStyle = color;
+          ctx.font = 'bold 10px sans-serif';
+          const label = p.type === 'enemy' ? `E${p.enemy_stat_id}` : (p.type === 'npc' ? `NPC` : `OBJ`);
+          ctx.fillText(`${label}#${idx}`, p.x - 12, p.y + 14);
+        });
+      }
+    }
+
+    function drawTilesetPalette() {
+      if (!TILESET_IMAGE) return;
+      const c = document.getElementById('tileset-canvas');
+      const scale = 2;
+      c.width = TILESET_IMAGE.width * scale;
+      c.height = TILESET_IMAGE.height * scale;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(TILESET_IMAGE, 0, 0, c.width, c.height);
+
+      // Highlight selected tile
+      const tx = (SELECTED_VRAM_TILE % 16) * 8 * scale;
+      const ty = Math.floor(SELECTED_VRAM_TILE / 16) * 8 * scale;
+      ctx.strokeStyle = '#ff7b00';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(tx, ty, 8 * scale, 8 * scale);
+    }
+
+    document.getElementById('tileset-canvas').addEventListener('mousedown', e => {
+      if (!TILESET_IMAGE) return;
+      const rect = e.target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const tx = Math.floor(x / 16);
+      const ty = Math.floor(y / 16);
+      SELECTED_VRAM_TILE = ty * 16 + tx;
+      const mapInfo = CURRENT_MAP.tile_mapping.find(t => t.vram_slot === SELECTED_VRAM_TILE);
+      document.getElementById('vram-tile-label').textContent = mapInfo
+        ? `VRAM #${SELECTED_VRAM_TILE} (Bank ${mapInfo.bank}:${mapInfo.tile})`
+        : `VRAM #${SELECTED_VRAM_TILE}`;
+      drawTilesetPalette();
+      setMapTool('paint');
+    });
+
+    function getCanvasMousePos(e) {
+      const canvas = document.getElementById('map-canvas');
+      const rect = canvas.getBoundingClientRect();
+      const zoom = parseFloat(document.getElementById('map-zoom').value);
+      const x = Math.round((e.clientX - rect.left) / zoom);
+      const y = Math.round((e.clientY - rect.top) / zoom);
+      return { x: Math.max(0, x), y: Math.max(0, y) };
+    }
+
+    const mapCanvas = document.getElementById('map-canvas');
+
+    mapCanvas.addEventListener('mousedown', e => {
+      if (!CURRENT_MAP) return;
+      const { x, y } = getCanvasMousePos(e);
+
+      if (MAP_TOOL === 'paint') {
+        PAINTING_TILES = true;
+        paintTileAt(x, y);
+        return;
+      }
+
+      if (MAP_TOOL === 'add_enemy') {
+        const newEnemy = {
+          slot: CURRENT_MAP.placements.length,
+          type: 'enemy',
+          factory: '0x0800FD55',
+          spawn_id: 0,
+          enemy_stat_id: 0,
+          x,
+          y,
+          sprite_id: SELECTED_SPRITE_ID || 3,
+          descriptor_ptr: '0x0876EA04',
+          waypoints: [{ x: x + 24, y, wait: 60, radius: 32 }]
+        };
+        CURRENT_MAP.placements.push(newEnemy);
+        SELECTED_ENTITY = { kind: 'placement', index: CURRENT_MAP.placements.length - 1 };
+        setMapTool('select');
+        redrawMapCanvas();
+        renderMapEntitiesList();
+        renderEntityInspector();
+        showToast('Enemigo agregado al mapa. Pulsa Guardar Mapa para escribir en ROM.');
+        return;
+      }
+
+      if (MAP_TOOL === 'add_npc' || MAP_TOOL === 'add_obj') {
+        const isNpc = MAP_TOOL === 'add_npc';
+        const newObj = {
+          slot: CURRENT_MAP.placements.length,
+          type: isNpc ? 'npc' : 'object',
+          factory: isNpc ? '0x08017DA3' : '0x080111A9',
+          spawn_id: 0,
+          x,
+          y,
+          sprite_id: SELECTED_SPRITE_ID || 0,
+          event_ptr: CURRENT_EVENT ? CURRENT_EVENT.pointer : '0x0877C5A4',
+          event_id: CURRENT_EVENT ? CURRENT_EVENT.id : 0
+        };
+        CURRENT_MAP.placements.push(newObj);
+        SELECTED_ENTITY = { kind: 'placement', index: CURRENT_MAP.placements.length - 1 };
+        setMapTool('select');
+        redrawMapCanvas();
+        renderMapEntitiesList();
+        renderEntityInspector();
+        showToast(`${isNpc ? 'NPC con Evento' : 'Objeto'} agregado al mapa.`);
+        return;
+      }
+
+      // Tool === 'select': hit test placements first, then warps, then triggers
+      for (let i = CURRENT_MAP.placements.length - 1; i >= 0; i--) {
+        const p = CURRENT_MAP.placements[i];
+        if (Math.abs(x - p.x) <= 14 && y >= p.y - 24 && y <= p.y + 10) {
+          SELECTED_ENTITY = { kind: 'placement', index: i };
+          DRAGGING = true;
+          redrawMapCanvas();
+          renderEntityInspector();
+          return;
+        }
+      }
+
+      for (let i = CURRENT_MAP.warps.length - 1; i >= 0; i--) {
+        const w = CURRENT_MAP.warps[i];
+        if (x >= w.x1 && x <= Math.max(w.x1 + 12, w.x2) && y >= w.y1 && y <= Math.max(w.y1 + 12, w.y2)) {
+          SELECTED_ENTITY = { kind: 'warp', index: i };
+          DRAGGING = true;
+          redrawMapCanvas();
+          renderEntityInspector();
+          return;
+        }
+      }
+
+      for (let i = CURRENT_MAP.trigger_zones.length - 1; i >= 0; i--) {
+        const tz = CURRENT_MAP.trigger_zones[i];
+        if (x >= tz.x1 && x <= Math.max(tz.x1 + 12, tz.x2) && y >= tz.y1 && y <= Math.max(tz.y1 + 12, tz.y2)) {
+          SELECTED_ENTITY = { kind: 'trigger', index: i };
+          DRAGGING = true;
+          redrawMapCanvas();
+          renderEntityInspector();
+          return;
+        }
+      }
+    });
+
+    mapCanvas.addEventListener('mousemove', e => {
+      if (!CURRENT_MAP) return;
+      const { x, y } = getCanvasMousePos(e);
+      document.getElementById('map-coords-status').textContent =
+        `Cursor: (${x}, ${y})px | Tile 8x8: (${Math.floor(x / 8)}, ${Math.floor(y / 8)}) | Chunk 256x256: (${Math.floor(x / 256)}, ${Math.floor(y / 256)})`;
+
+      if (PAINTING_TILES && MAP_TOOL === 'paint') {
+        paintTileAt(x, y);
+        return;
+      }
+
+      if (DRAGGING && SELECTED_ENTITY) {
+        if (SELECTED_ENTITY.kind === 'placement') {
+          const p = CURRENT_MAP.placements[SELECTED_ENTITY.index];
+          const dx = x - p.x;
+          const dy = y - p.y;
+          p.x = x;
+          p.y = y;
+          if (p.waypoints) {
+            p.waypoints.forEach(wp => { wp.x += dx; wp.y += dy; });
+          }
+          redrawMapCanvas();
+          renderEntityInspector();
+        } else if (SELECTED_ENTITY.kind === 'warp') {
+          const w = CURRENT_MAP.warps[SELECTED_ENTITY.index];
+          const rw = w.x2 - w.x1;
+          const rh = w.y2 - w.y1;
+          w.x1 = x; w.y1 = y;
+          w.x2 = x + rw; w.y2 = y + rh;
+          redrawMapCanvas();
+          renderEntityInspector();
+        }
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      DRAGGING = false;
+      PAINTING_TILES = false;
+    });
+
+    function paintTileAt(x, y) {
+      const lslot = parseInt(document.getElementById('paint-layer-select').value, 10);
+      const layer = CURRENT_MAP.layers[lslot];
+      if (!layer || !layer.active || layer.kind !== 'dominant') return;
+
+      const cx = Math.floor(x / 256);
+      const cy = Math.floor(y / 256);
+      if (cx < 0 || cx >= layer.cols || cy < 0 || cy >= layer.rows) return;
+
+      const tx = Math.floor((x % 256) / 8);
+      const ty = Math.floor((y % 256) / 8);
+      const chunkIdx = cy * layer.cols + cx;
+      const hf = document.getElementById('paint-hflip').checked ? 1 : 0;
+      const vf = document.getElementById('paint-vflip').checked ? 1 : 0;
+      const entry = (SELECTED_VRAM_TILE & 0x3FF) | (hf << 10) | (vf << 11);
+
+      layer.chunks[chunkIdx][ty * 32 + tx] = entry;
+      PAINTED_CHUNKS_DIRTY[`${lslot}_${chunkIdx}`] = {
+        record_offset: layer.record_offset,
+        chunk_index: chunkIdx,
+        entries: layer.chunks[chunkIdx]
+      };
+
+      // Live draw the 8x8 tile onto the layer offscreen image or directly on canvas
+      if (TILESET_IMAGE && LAYER_IMAGES[lslot]) {
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = LAYER_IMAGES[lslot].width;
+        offCanvas.height = LAYER_IMAGES[lslot].height;
+        const octx = offCanvas.getContext('2d');
+        octx.drawImage(LAYER_IMAGES[lslot], 0, 0);
+        const srcX = (SELECTED_VRAM_TILE % 16) * 8;
+        const srcY = Math.floor(SELECTED_VRAM_TILE / 16) * 8;
+        octx.save();
+        octx.translate(cx * 256 + tx * 8 + (hf ? 8 : 0), cy * 256 + ty * 8 + (vf ? 8 : 0));
+        octx.scale(hf ? -1 : 1, vf ? -1 : 1);
+        octx.drawImage(TILESET_IMAGE, srcX, srcY, 8, 8, 0, 0, 8, 8);
+        octx.restore();
+        const updatedImg = new Image();
+        updatedImg.onload = () => { LAYER_IMAGES[lslot] = updatedImg; redrawMapCanvas(); };
+        updatedImg.src = offCanvas.toDataURL();
+      }
+    }
+
+    // =========================================================================
+    // ENTITY INSPECTOR & LIST
+    // =========================================================================
+    function renderMapEntitiesList() {
+      const box = document.getElementById('map-entities-list');
+      if (!CURRENT_MAP) return;
+      const items = [];
+
+      CURRENT_MAP.placements.forEach((p, idx) => {
+        const badgeClass = p.type === 'enemy' ? 'badge-enemy' : 'badge-npc';
+        const title = p.type === 'enemy'
+          ? `👾 Enemigo #${idx} (Stat ${p.enemy_stat_id}, Spr ${p.sprite_id})`
+          : (p.type === 'npc' ? `💬 NPC #${idx} (Spr ${p.sprite_id})` : `📦 Objeto #${idx} (Spr ${p.sprite_id})`);
+        items.push(`
+          <div class="list-item" style="padding:5px 8px;" onclick="selectMapEntity('placement', ${idx})">
+            <span>${title}</span>
+            <span class="badge ${badgeClass}">(${p.x}, ${p.y})</span>
+          </div>
+        `);
+      });
+
+      CURRENT_MAP.warps.forEach((w, idx) => {
+        items.push(`
+          <div class="list-item" style="padding:5px 8px;" onclick="selectMapEntity('warp', ${idx})">
+            <span>🚪 Warp #${idx} → Mapa #${w.dest_map}</span>
+            <span class="badge badge-warp">(${w.x1}, ${w.y1})</span>
+          </div>
+        `);
+      });
+
+      box.innerHTML = items.join('') || '<span style="font-size:11px;color:var(--muted);">Sin entidades en este mapa</span>';
+    }
+
+    function selectMapEntity(kind, index) {
+      SELECTED_ENTITY = { kind, index };
+      redrawMapCanvas();
+      renderEntityInspector();
+    }
+
+    function renderEntityInspector() {
+      const box = document.getElementById('entity-inspector');
+      const badge = document.getElementById('selected-badge');
+      if (!SELECTED_ENTITY || !CURRENT_MAP) {
+        badge.textContent = 'Ninguno';
+        return;
+      }
+
+      if (SELECTED_ENTITY.kind === 'placement') {
+        const idx = SELECTED_ENTITY.index;
+        const p = CURRENT_MAP.placements[idx];
+        badge.textContent = `${p.type.toUpperCase()} #${idx}`;
+
+        const enemyOptions = OVERVIEW.enemies.map(e =>
+          `<option value="${e.id}" ${e.id === p.enemy_stat_id ? 'selected' : ''}>ID #${e.id} — HP:${e.hp} ATK:${e.attack}</option>`
+        ).join('');
+
+        box.innerHTML = `
+          <h3>
+            <span>Propiedades de ${p.type === 'enemy' ? 'Enemigo' : (p.type === 'npc' ? 'NPC / Evento' : 'Objeto')}</span>
+            <button class="btn btn-danger" onclick="deleteSelectedPlacement()">🗑️ Eliminar</button>
+          </h3>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Tipo de Entidad</label>
+              <select onchange="changePlacementType(${idx}, this.value)">
+                <option value="enemy" ${p.type === 'enemy' ? 'selected' : ''}>Enemigo (0x0800FD55)</option>
+                <option value="npc" ${p.type === 'npc' ? 'selected' : ''}>NPC / Diálogo (0x08017DA3)</option>
+                <option value="object" ${p.type === 'object' ? 'selected' : ''}>Objeto Mapa (0x080111A9)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>ID de Sprite (0..296)</label>
+              <input type="number" min="0" max="296" value="${p.sprite_id}" onchange="updatePlacementField(${idx}, 'sprite_id', parseInt(this.value,10))" />
+            </div>
+            <div class="form-field">
+              <label>Coordenada X (px)</label>
+              <input type="number" value="${p.x}" onchange="updatePlacementField(${idx}, 'x', parseInt(this.value,10))" />
+            </div>
+            <div class="form-field">
+              <label>Coordenada Y (px)</label>
+              <input type="number" value="${p.y}" onchange="updatePlacementField(${idx}, 'y', parseInt(this.value,10))" />
+            </div>
+            ${p.type === 'enemy' ? `
+              <div class="form-field full">
+                <label>Estadísticas de Enemigo (Enemy Stat ID 0..149)</label>
+                <select onchange="updatePlacementField(${idx}, 'enemy_stat_id', parseInt(this.value,10))">${enemyOptions}</select>
+              </div>
+              <div class="form-field full">
+                <label>Puntos de Patrulla (${(p.waypoints || []).length} Waypoints)</label>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  ${(p.waypoints || []).map((wp, widx) => `
+                    <div style="display:flex; gap:4px; align-items:center;">
+                      <input type="number" value="${wp.x}" title="Waypoint X" onchange="updateWaypoint(${idx}, ${widx}, 'x', parseInt(this.value,10))" />
+                      <input type="number" value="${wp.y}" title="Waypoint Y" onchange="updateWaypoint(${idx}, ${widx}, 'y', parseInt(this.value,10))" />
+                      <input type="number" value="${wp.wait}" title="Espera" onchange="updateWaypoint(${idx}, ${widx}, 'wait', parseInt(this.value,10))" />
+                    </div>
+                  `).join('')}
+                  <button class="btn" onclick="addWaypointToPlacement(${idx})">➕ Añadir Punto de Patrulla</button>
+                </div>
+              </div>
+            ` : `
+              <div class="form-field full">
+                <label>Puntero de Evento / Diálogo (0x08XXXXXX)</label>
+                <input type="text" value="${p.event_ptr || '0x0877C5A4'}" onchange="updatePlacementField(${idx}, 'event_ptr', this.value)" />
+              </div>
+              <div class="form-field full">
+                <button class="btn" onclick="openPlacementEventInCreator(${idx})">📜 Abrir / Editar Evento en el Creador de Eventos</button>
+              </div>
+            `}
+          </div>
+        `;
+      } else if (SELECTED_ENTITY.kind === 'warp') {
+        const idx = SELECTED_ENTITY.index;
+        const w = CURRENT_MAP.warps[idx];
+        badge.textContent = `WARP #${idx}`;
+        box.innerHTML = `
+          <h3>
+            <span>Zona Warp / Salida #${idx}</span>
+            <button class="btn btn-primary" onclick="loadMap(${w.dest_map})">🚀 Ir al Mapa #${w.dest_map}</button>
+          </h3>
+          <div class="form-grid">
+            <div class="form-field"><label>X1</label><input type="number" value="${w.x1}" onchange="updateWarpField(${idx},'x1',this.value)" /></div>
+            <div class="form-field"><label>Y1</label><input type="number" value="${w.y1}" onchange="updateWarpField(${idx},'y1',this.value)" /></div>
+            <div class="form-field"><label>X2</label><input type="number" value="${w.x2}" onchange="updateWarpField(${idx},'x2',this.value)" /></div>
+            <div class="form-field"><label>Y2</label><input type="number" value="${w.y2}" onchange="updateWarpField(${idx},'y2',this.value)" /></div>
+            <div class="form-field"><label>Mapa Destino ID</label><input type="number" value="${w.dest_map}" onchange="updateWarpField(${idx},'dest_map',this.value)" /></div>
+            <div class="form-field"><label>Dirección</label><input type="number" value="${w.dest_dir}" onchange="updateWarpField(${idx},'dest_dir',this.value)" /></div>
+            <div class="form-field"><label>Destino X</label><input type="number" value="${w.dest_x}" onchange="updateWarpField(${idx},'dest_x',this.value)" /></div>
+            <div class="form-field"><label>Destino Y</label><input type="number" value="${w.dest_y}" onchange="updateWarpField(${idx},'dest_y',this.value)" /></div>
+          </div>
+        `;
+      } else if (SELECTED_ENTITY.kind === 'trigger') {
+        const idx = SELECTED_ENTITY.index;
+        const tz = CURRENT_MAP.trigger_zones[idx];
+        badge.textContent = `TRIGGER #${idx}`;
+        box.innerHTML = `
+          <h3>Trigger de Script #${idx}</h3>
+          <div class="form-grid">
+            <div class="form-field"><label>X1</label><input type="number" value="${tz.x1}" onchange="CURRENT_MAP.trigger_zones[${idx}].x1=parseInt(this.value,10);redrawMapCanvas()" /></div>
+            <div class="form-field"><label>Y1</label><input type="number" value="${tz.y1}" onchange="CURRENT_MAP.trigger_zones[${idx}].y1=parseInt(this.value,10);redrawMapCanvas()" /></div>
+            <div class="form-field"><label>X2</label><input type="number" value="${tz.x2}" onchange="CURRENT_MAP.trigger_zones[${idx}].x2=parseInt(this.value,10);redrawMapCanvas()" /></div>
+            <div class="form-field"><label>Y2</label><input type="number" value="${tz.y2}" onchange="CURRENT_MAP.trigger_zones[${idx}].y2=parseInt(this.value,10);redrawMapCanvas()" /></div>
+            <div class="form-field full"><label>Script Pointer</label><input type="text" value="${tz.script_ptr}" onchange="CURRENT_MAP.trigger_zones[${idx}].script_ptr=this.value" /></div>
+          </div>
+        `;
+      }
+    }
+
+    function changePlacementType(idx, newType) {
+      const p = CURRENT_MAP.placements[idx];
+      p.type = newType;
+      delete p.offset; // Allocate fresh structure on save
+      if (newType === 'enemy' && !p.waypoints) {
+        p.enemy_stat_id = 0;
+        p.waypoints = [{ x: p.x + 20, y: p.y, wait: 60, radius: 32 }];
+      }
+      redrawMapCanvas();
+      renderMapEntitiesList();
+      renderEntityInspector();
+    }
+
+    function updatePlacementField(idx, field, val) {
+      const p = CURRENT_MAP.placements[idx];
+      p[field] = val;
+      if (field === 'sprite_id' && !SPRITE_THUMB_CACHE[val]) {
+        fetch(`/api/sprite/${val}?slot=0&dir=0`).then(r => r.json()).then(sdata => {
+          if (sdata.frames && sdata.frames[0]) {
+            const img = new Image();
+            img.onload = () => { SPRITE_THUMB_CACHE[val] = img; redrawMapCanvas(); };
+            img.src = sdata.frames[0].png;
+          }
+        });
+      }
+      redrawMapCanvas();
+      renderMapEntitiesList();
+    }
+
+    function updateWaypoint(pidx, widx, field, val) {
+      CURRENT_MAP.placements[pidx].waypoints[widx][field] = val;
+      redrawMapCanvas();
+    }
+
+    function addWaypointToPlacement(pidx) {
+      const p = CURRENT_MAP.placements[pidx];
+      p.waypoints = p.waypoints || [];
+      p.waypoints.push({ x: p.x + 32, y: p.y, wait: 60, radius: 32 });
+      delete p.offset;
+      redrawMapCanvas();
+      renderEntityInspector();
+    }
+
+    function deleteSelectedPlacement() {
+      if (!SELECTED_ENTITY || SELECTED_ENTITY.kind !== 'placement') return;
+      CURRENT_MAP.placements.splice(SELECTED_ENTITY.index, 1);
+      SELECTED_ENTITY = null;
+      redrawMapCanvas();
+      renderMapEntitiesList();
+      renderEntityInspector();
+    }
+
+    function updateWarpField(idx, field, val) {
+      CURRENT_MAP.warps[idx][field] = parseInt(val, 10);
+      redrawMapCanvas();
+    }
+
+    async function saveCurrentMap() {
+      if (!CURRENT_MAP) return;
+      const res = await fetch(`/api/map/${CURRENT_MAP_ID}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          placements: CURRENT_MAP.placements,
+          warps: CURRENT_MAP.warps,
+          trigger_zones: CURRENT_MAP.trigger_zones,
+          painted_chunks: Object.values(PAINTED_CHUNKS_DIRTY)
+        })
+      });
+      const updated = await res.json();
+      if (updated.error) {
+        showToast('Error: ' + updated.error, '#ef4444');
+        return;
+      }
+      CURRENT_MAP = updated;
+      PAINTED_CHUNKS_DIRTY = {};
+      OVERVIEW.maps[CURRENT_MAP_ID] = updated.summary;
+      renderMapList();
+      renderMapEntitiesList();
+      showToast(`Mapa #${CURRENT_MAP_ID} guardado y parcheado en Dragon Ball Z - Buu's Fury (Modded).gba!`);
+    }
+
+    async function exportModdedRom() {
+      const res = await fetch('/api/export_rom', { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        showToast(`ROM exportada (${(data.size_bytes / 1048576).toFixed(2)} MB): ${data.path}`);
+      }
+    }
+
+    // =========================================================================
+    // TAB 2: 297 SPRITES & 150 ENEMY STATS
+    // =========================================================================
+    async function loadSpritesPage(delta) {
+      SPRITE_PAGE_START = Math.max(0, Math.min(240, SPRITE_PAGE_START + delta * 60));
+      document.getElementById('sprite-page-label').textContent =
+        `${SPRITE_PAGE_START} - ${ Math.min(296, SPRITE_PAGE_START + 59) }`;
+
+      const res = await fetch(`/api/sprites_batch?start=${SPRITE_PAGE_START}&count=60`);
+      const data = await res.json();
+      const grid = document.getElementById('sprite-catalog-grid');
+      grid.innerHTML = data.items.map(item => {
+        if (item.thumb && !SPRITE_THUMB_CACHE[item.sprite_id]) {
+          const img = new Image();
+          img.src = item.thumb;
+          SPRITE_THUMB_CACHE[item.sprite_id] = img;
+        }
+        return `
+          <div class="sprite-card ${item.sprite_id === SELECTED_SPRITE_ID ? 'active' : ''}" onclick="selectSpriteForViewer(${item.sprite_id})">
+            ${item.thumb ? `<img src="${item.thumb}" />` : `<div style="height:40px;"></div>`}
+            <span>Sprite #${item.sprite_id}</span>
+            <small style="font-size:9px; color:var(--muted);">${item.slot_count} anims • ${item.maps.length} mapas</small>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function selectSpriteForViewer(spriteId) {
+      SELECTED_SPRITE_ID = spriteId;
+      const res = await fetch(`/api/sprite/${spriteId}?slot=0&dir=0`);
+      const info = await res.json();
+      document.getElementById('sp-detail-title').textContent =
+        `Sprite #${spriteId} (${info.offset}) — ${info.slot_count} Slots de Animación`;
+
+      const slotSel = document.getElementById('sp-slot-select');
+      slotSel.innerHTML = info.slots.map(s =>
+        `<option value="${s.slot}">Slot #${s.slot} (${s.frames} frames)</option>`
+      ).join('');
+
+      startSpriteAnimation(info);
+    }
+
+    async function reloadSelectedSprite() {
+      const slot = document.getElementById('sp-slot-select').value || 0;
+      const dir = document.getElementById('sp-dir-select').value || 0;
+      const res = await fetch(`/api/sprite/${SELECTED_SPRITE_ID}?slot=${slot}&dir=${dir}`);
+      const info = await res.json();
+      startSpriteAnimation(info);
+    }
+
+    function startSpriteAnimation(info) {
+      clearInterval(SPRITE_ANIM_TIMER);
+      SPRITE_ANIM_FRAMES = info.frames || [];
+      SPRITE_ANIM_IDX = 0;
+      const imgEl = document.getElementById('sp-anim-img');
+      const metaEl = document.getElementById('sp-meta-info');
+
+      if (SPRITE_ANIM_FRAMES.length === 0) {
+        imgEl.src = '';
+        metaEl.textContent = 'Sin frames en este slot';
+        return;
+      }
+
+      const showFrame = () => {
+        const f = SPRITE_ANIM_FRAMES[SPRITE_ANIM_IDX % SPRITE_ANIM_FRAMES.length];
+        imgEl.src = f.png;
+        metaEl.textContent =
+          `Frame ${f.frame_index + 1}/${SPRITE_ANIM_FRAMES.length} (${f.width}x${f.height}px, ${f.pieces.length} piezas OAM) • Usado en mapas: ${info.maps.slice(0, 10).join(', ') || 'ninguno'}`;
+        SPRITE_ANIM_IDX++;
+      };
+      showFrame();
+      if (SPRITE_ANIM_FRAMES.length > 1) {
+        SPRITE_ANIM_TIMER = setInterval(showFrame, 180);
+      }
+    }
+
+    function sendSelectedSpriteToMap() {
+      switchTab('map');
+      setMapTool('add_npc');
+      showToast(`Sprite #${SELECTED_SPRITE_ID} seleccionado. Haz clic en cualquier punto del mapa para colocarlo.`);
+    }
+
+    function renderEnemiesTable() {
+      if (!OVERVIEW) return;
+      const q = (document.getElementById('enemy-search')?.value || '').trim().toLowerCase();
+      const tbody = document.getElementById('enemies-tbody');
+      const rows = OVERVIEW.enemies.filter(e => {
+        if (!q) return true;
+        return String(e.id).includes(q) || String(e.hp).includes(q) || e.maps.join(',').includes(q);
+      });
+
+      tbody.innerHTML = rows.map(e => `
+        <tr>
+          <td><strong>#${e.id}</strong></td>
+          <td style="color:var(--muted);">${e.offset}</td>
+          <td><input type="number" id="en-hp-${e.id}" value="${e.hp}" style="width:82px;" /></td>
+          <td><input type="number" id="en-atk-${e.id}" value="${e.attack}" style="width:76px;" /></td>
+          <td><input type="number" id="en-def-${e.id}" value="${e.defense_exp}" style="width:76px;" /></td>
+          <td><input type="number" id="en-w0-${e.id}" value="${e.word_00}" style="width:70px;" /></td>
+          <td><input type="text" id="en-ai-${e.id}" value="${e.ai_node}" style="width:98px;" /></td>
+          <td>${e.sprites.map(s => `<span class="badge" style="cursor:pointer;" onclick="selectSpriteForViewer(${s})">Spr#${s}</span>`).join(' ')}</td>
+          <td>${e.maps.slice(0, 4).map(m => `<span class="badge badge-warp" style="cursor:pointer;" onclick="switchTab('map');loadMap(${m})">M#${m}</span>`).join(' ')}</td>
+          <td><button class="btn btn-primary" onclick="saveEnemyRow(${e.id})">Guardar</button></td>
+        </tr>
+      `).join('');
+    }
+
+    async function saveEnemyRow(enemyId) {
+      const payload = {
+        hp: parseInt(document.getElementById(`en-hp-${enemyId}`).value, 10),
+        attack: parseInt(document.getElementById(`en-atk-${enemyId}`).value, 10),
+        defense_exp: parseInt(document.getElementById(`en-def-${enemyId}`).value, 10),
+        word_00: parseInt(document.getElementById(`en-w0-${enemyId}`).value, 10),
+        ai_node: document.getElementById(`en-ai-${enemyId}`).value
+      };
+      const res = await fetch(`/api/enemy/${enemyId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const updated = await res.json();
+      OVERVIEW.enemies[enemyId] = updated;
+      showToast(`Estadísticas del Enemigo #${enemyId} actualizadas en la ROM.`);
+    }
+
+    // =========================================================================
+    // TAB 3: EVENTS, STRINGS & BYTECODE STREAMS
+    // =========================================================================
+    async function loadEventsAndStrings() {
+      const res = await fetch('/api/events');
+      const data = await res.json();
+      ALL_EVENTS = data.events;
+      OPCODE_STREAMS = data.opcode_streams;
+
+      renderEventsList();
+      if (ALL_EVENTS.length > 0) {
+        selectEvent(0);
+      }
+
+      const opSel = document.getElementById('opcode-stream-select');
+      opSel.innerHTML = OPCODE_STREAMS.map((s, idx) =>
+        `<option value="${idx}">${s.name} (${s.start}, ${s.bytes}B)</option>`
+      ).join('');
+      renderSelectedOpcodeStream();
+
+      searchStrings();
+    }
+
+    function renderEventsList() {
+      const q = (document.getElementById('event-search')?.value || '').trim().toLowerCase();
+      const list = document.getElementById('event-list');
+      const filtered = ALL_EVENTS.filter(ev =>
+        !q || String(ev.id).includes(q) || ev.pointer.toLowerCase().includes(q)
+      );
+      list.innerHTML = filtered.map(ev => `
+        <div class="list-item ${CURRENT_EVENT && CURRENT_EVENT.id === ev.id ? 'active' : ''}" onclick="selectEvent(${ev.id})">
+          <div>
+            <strong>Evento #${String(ev.id).padStart(3, '0')}</strong>
+            <div style="font-size:10px; color:var(--muted);">${ev.pointer} • ${ev.size} bytes</div>
+          </div>
+          <span class="badge badge-npc">Tipo ${ev.dialog_type}</span>
+        </div>
+      `).join('');
+    }
+
+    async function selectEvent(evId) {
+      const res = await fetch(`/api/event/${evId}`);
+      CURRENT_EVENT = await res.json();
+      renderEventsList();
+      populateEventEditor(CURRENT_EVENT);
+    }
+
+    function populateEventEditor(ev) {
+      document.getElementById('ev-id').value = ev.id !== undefined ? `Evento #${ev.id}` : 'Nuevo Evento Personalizado';
+      document.getElementById('ev-ptr').value = ev.pointer;
+      document.getElementById('ev-dialog-ptr').value = ev.dialog_ptr || ev.words[0];
+      document.getElementById('ev-type-size').value = `Tipo ${ev.dialog_type ?? '-'} (${ev.size} bytes, ${ev.words.length} palabras)`;
+
+      const grid = document.getElementById('ev-words-grid');
+      grid.innerHTML = ev.words.map((w, idx) => `
+        <div class="form-field">
+          <label>Word [${idx}] (+0x${(idx * 4).toString(16).toUpperCase()})</label>
+          <input type="text" class="ev-word-input" data-idx="${idx}" value="${w}" />
+        </div>
+      `).join('');
+    }
+
+    function collectEventWords() {
+      return Array.from(document.querySelectorAll('.ev-word-input')).map(el => el.value.trim());
+    }
+
+    async function saveCurrentEvent() {
+      if (!CURRENT_EVENT || CURRENT_EVENT.id === undefined) return;
+      const words = collectEventWords();
+      const res = await fetch(`/api/event/${CURRENT_EVENT.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ words })
+      });
+      CURRENT_EVENT = await res.json();
+      populateEventEditor(CURRENT_EVENT);
+      showToast(`Evento #${CURRENT_EVENT.id} actualizado en la ROM.`);
+    }
+
+    async function cloneAsNewCustomEvent() {
+      const words = collectEventWords();
+      const res = await fetch('/api/event/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template_event_id: CURRENT_EVENT ? (CURRENT_EVENT.id || 0) : 0,
+          words
+        })
+      });
+      const created = await res.json();
+      CURRENT_EVENT = created;
+      populateEventEditor(created);
+      showToast(`Nuevo Evento creado en ${created.pointer}! Ya puedes asignarlo a cualquier NPC.`);
+    }
+
+    function assignEventToSelectedMapNpc() {
+      if (!CURRENT_EVENT) return;
+      if (SELECTED_ENTITY && SELECTED_ENTITY.kind === 'placement') {
+        const p = CURRENT_MAP.placements[SELECTED_ENTITY.index];
+        p.type = 'npc';
+        p.event_ptr = CURRENT_EVENT.pointer;
+        p.event_id = CURRENT_EVENT.id ?? null;
+        switchTab('map');
+        redrawMapCanvas();
+        renderEntityInspector();
+        showToast(`Puntero ${CURRENT_EVENT.pointer} asignado al NPC #${SELECTED_ENTITY.index}. Guarda el mapa para aplicar.`);
+      } else {
+        switchTab('map');
+        setMapTool('add_npc');
+        showToast(`Evento ${CURRENT_EVENT.pointer} listo. Haz clic en el mapa para colocar un NPC con este evento.`);
+      }
+    }
+
+    async function openPlacementEventInCreator(pidx) {
+      const p = CURRENT_MAP.placements[pidx];
+      switchTab('events');
+      if (ALL_EVENTS.length === 0) await loadEventsAndStrings();
+      if (p.event_id !== null && p.event_id !== undefined) {
+        await selectEvent(p.event_id);
+      }
+    }
+
+    function renderSelectedOpcodeStream() {
+      const idx = parseInt(document.getElementById('opcode-stream-select').value || '0', 10);
+      const stream = OPCODE_STREAMS[idx];
+      if (!stream) return;
+      document.getElementById('opcode-tbody').innerHTML = stream.instructions.map(ins => `
+        <tr>
+          <td style="color:var(--muted);">${ins.offset}</td>
+          <td><span class="badge">${ins.opcode}</span></td>
+          <td style="color:#ffa94d; font-weight:600;">${ins.mnemonic}</td>
+          <td>${ins.args.join(', ')}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function searchStrings() {
+      const q = document.getElementById('string-search').value.trim();
+      const res = await fetch(`/api/strings?q=${encodeURIComponent(q)}&limit=80`);
+      const data = await res.json();
+      const box = document.getElementById('strings-list');
+      box.innerHTML = data.items.map(s => `
+        <div class="inspector-section" style="padding:8px 12px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px; color:var(--muted);">
+            <span>#${s.index} • <code>${s.pointer}</code> (máx ${s.max_chars} chars)</span>
+            <button class="btn" style="padding:2px 6px; font-size:10px;" onclick="saveString(${s.index})">💾 Guardar Texto</button>
+          </div>
+          <input type="text" id="str-input-${s.index}" maxlength="${s.max_chars}" value="${s.text.replace(/"/g, '&quot;')}" />
+        </div>
+      `).join('');
+    }
+
+    async function saveString(sidx) {
+      const text = document.getElementById(`str-input-${sidx}`).value;
+      const res = await fetch(`/api/string/${sidx}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const updated = await res.json();
+      showToast(`Texto #${sidx} (${updated.pointer}) actualizado en la ROM.`);
+    }
+
+    initApp();
+  </script>
+</body>
+</html>

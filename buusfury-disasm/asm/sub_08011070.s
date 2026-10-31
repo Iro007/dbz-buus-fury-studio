@@ -1,0 +1,59 @@
+	CODE16
+|sub_08011070|
+|unk_08011070|
+; cited by 0x0042EDF6 (a pool word names 0x080110A8)
+		LDRB r0, [r5]
+		CMP r0, #1
+		BEQ      |loc_0801107A|
+		CMP r0, #2
+		BNE      |loc_080110CA|
+|loc_0801107A|
+		ADD r6, r5, #4
+		ADD r1, r4, #0
+		MOV r0, sp
+		BL       |Object_GetPoints|
+		LDR r0, [r6]
+		LDR r1, [sp, #8]
+		CMP r0, r1
+		BGE      |loc_080110CA|
+		LDR r0, [sp]
+		LDR r1, [r6, #8]
+		CMP r0, r1
+		BGE      |loc_080110CA|
+		LDR r0, [r6, #4]
+		LDR r1, [sp, #0xc]
+		CMP r0, r1
+		BGE      |loc_080110CA|
+		LDR r0, [sp, #4]
+		LDR r1, [r6, #0xc]
+		CMP r0, r1
+		BGE      |loc_080110CA|
+		MOV r0, #0xff
+		ADD r0, #0xcd
+		LDR r0, [r0, r4]
+		CMP r0, #0
+		BEQ      |loc_080110CA|
+		ADD r5, #0x14
+		ADD r1, r5, #0
+		ADD r0, r4, #0
+		BL       |Battle_ComputeDamage|
+		LDR r1, [r4]
+		ADD r0, r4, #0
+		LDR r2, [r1, #0x58]
+		ADD r2, r2, r1
+		ADD r1, r5, #0
+		BL       |Thunk_JumpRegister1|
+		MOV r0, #1
+		B        |inc_0x0158_0x143f2| + 0x10f14
+|loc_080110CA|
+		MOV r0, #0
+		B        |inc_0x0158_0x143f2| + 0x10f14
+|loc_080110CE|
+|unk_080110CE|
+		ADD r0, r4, #0
+	INCBIN  baserom.gba_0x110d0_0x110d2.extracted
+|sub_080110D2|
+|unk_080110D2|
+	INCBIN	baserom.gba_0x110d2_0x110d6.extracted
+|dat_080110D6|
+	DCW      0x0000
