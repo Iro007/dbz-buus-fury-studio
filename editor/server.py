@@ -1361,6 +1361,40 @@ class EditorHTTPHandler(BaseHTTPRequestHandler):
                 )
                 return
 
+            if path == "/api/source_files":
+                src_root = os.path.join(WORKSPACE, "src_original")
+                files_list = []
+                for sub in ("include", "engine", "decompiled"):
+                    subdir = os.path.join(src_root, sub)
+                    if not os.path.exists(subdir):
+                        continue
+                    for fname in sorted(os.listdir(subdir)):
+                        if fname.endswith((".hpp", ".h", ".cpp", ".c")):
+                            full = os.path.join(subdir, fname)
+                            files_list.append(
+                                {
+                                    "rel_path": f"{sub}/{fname}",
+                                    "category": sub,
+                                    "name": fname,
+                                    "size": os.path.getsize(full),
+                                }
+                            )
+                self._send_json({"files": files_list})
+                return
+
+            if path == "/api/source_file":
+                rel = qs.get("path", ["engine/battle_and_damage.cpp"])[0]
+                safe_rel = os.path.normpath(rel).lstrip("\\/")
+                src_root = os.path.abspath(os.path.join(WORKSPACE, "src_original"))
+                target = os.path.abspath(os.path.join(src_root, safe_rel))
+                if not target.startswith(src_root) or not os.path.isfile(target):
+                    self._send_json({"error": "Invalid path"}, status=400)
+                    return
+                with open(target, encoding="utf-8", errors="replace") as f:
+                    content = f.read()
+                self._send_json({"path": rel, "content": content})
+                return
+
             self._send_json({"error": f"Not found: {path}"}, status=404)
         except Exception as e:
             traceback.print_exc()

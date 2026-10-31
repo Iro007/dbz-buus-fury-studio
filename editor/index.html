@@ -443,6 +443,7 @@
       <button class="nav-tab active" onclick="switchTab('map')">🗺️ Editor de Mapas y Niveles</button>
       <button class="nav-tab" onclick="switchTab('chars')">🐉 Personajes, Sprites y Enemigos</button>
       <button class="nav-tab" onclick="switchTab('events')">📜 Creador de Eventos y Diálogos</button>
+      <button class="nav-tab" onclick="switchTab('code')">💻 Código Original C/C++ (3,371 Func.)</button>
     </div>
 
     <div class="header-actions">
@@ -730,6 +731,35 @@
     </div>
   </div>
 
+  <!-- ==================================================================== -->
+  <!-- TAB 4: ORIGINAL C/C++ SOURCE CODE VIEWER (3,371 DECOMPILED FUNCTIONS)-->
+  <!-- ==================================================================== -->
+  <div id="tab-code" class="tab-view">
+    <div style="width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column;">
+      <div class="panel-header">
+        <span>📂 Código Fuente C/C++ (`src_original/`)</span>
+        <span class="badge" id="cpp-file-count">0 archivos</span>
+      </div>
+      <div class="search-box">
+        <input type="text" id="cpp-file-search" placeholder="Filtrar módulo C++ o cabecera..." oninput="renderCppFileList()" />
+      </div>
+      <div id="cpp-files-list" class="list-scroll"></div>
+    </div>
+
+    <div style="flex: 1; display: flex; flex-direction: column; background: #090b10; overflow: hidden;">
+      <div class="panel-header" style="background: var(--bg-panel); border-bottom: 1px solid var(--border);">
+        <div>
+          <strong id="cpp-current-path" style="color: var(--accent); font-family: monospace; font-size: 13px;">Selecciona un archivo...</strong>
+          <span id="cpp-current-meta" style="color: var(--text-muted); font-size: 11px; margin-left: 10px;"></span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="cpp-inline-search" placeholder="Buscar función (ej. Battle_ComputeDamage, sub_08009AB4)..." style="width: 310px; padding: 5px 10px; background: #0b0d13; border: 1px solid var(--border); color: var(--text-main); border-radius: 5px; font-size: 12px;" oninput="findInCppViewer()" />
+        </div>
+      </div>
+      <pre id="cpp-code-pre" style="flex: 1; margin: 0; padding: 18px 22px; overflow: auto; font-family: 'Consolas', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.55; color: #e2e8f0; tab-size: 4; white-space: pre;"></pre>
+    </div>
+  </div>
+
   <div id="toast">Guardado correctamente</div>
 
   <script>
@@ -760,6 +790,10 @@
     let OPCODE_STREAMS = [];
     let CURRENT_EVENT = null;
 
+    let CPP_FILES = [];
+    let CURRENT_CPP_PATH = '';
+    let CURRENT_CPP_CONTENT = '';
+
     function showToast(msg, color = '#22c55e') {
       const el = document.getElementById('toast');
       el.textContent = msg;
@@ -773,7 +807,7 @@
       document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tab).classList.add('active');
-      const idx = { map: 0, chars: 1, events: 2 }[tab];
+      const idx = { map: 0, chars: 1, events: 2, code: 3 }[tab];
       document.querySelectorAll('.nav-tab')[idx].classList.add('active');
 
       if (tab === 'chars' && Object.keys(SPRITE_THUMB_CACHE).length < 15) {
@@ -782,6 +816,9 @@
       }
       if (tab === 'events' && ALL_EVENTS.length === 0) {
         loadEventsAndStrings();
+      }
+      if (tab === 'code' && CPP_FILES.length === 0) {
+        loadCppSourceFiles();
       }
     }
 
@@ -1793,6 +1830,82 @@
       });
       const updated = await res.json();
       showToast(`Texto #${sidx} (${updated.pointer}) actualizado en la ROM.`);
+    }
+
+    // =========================================================================
+    // TAB 4: ORIGINAL C/C++ SOURCE VIEWER
+    // =========================================================================
+    async function loadCppSourceFiles() {
+      const res = await fetch('/api/source_files');
+      const data = await res.json();
+      CPP_FILES = data.files || [];
+      document.getElementById('cpp-file-count').textContent = `${CPP_FILES.length} archivos`;
+      renderCppFileList();
+      if (CPP_FILES.length > 0) {
+        const preferred = CPP_FILES.find(f => f.path.includes('battle_and_damage.cpp')) || CPP_FILES[0];
+        await selectCppFile(preferred.path);
+      }
+    }
+
+    function renderCppFileList() {
+      const q = (document.getElementById('cpp-file-search').value || '').toLowerCase().trim();
+      const box = document.getElementById('cpp-files-list');
+      const filtered = CPP_FILES.filter(f => !q || f.path.toLowerCase().includes(q));
+      const catNames = {
+        include: '📐 Cabeceras y VTables (include/)',
+        engine: '⚙️ Motor Original Reconstruido (engine/)',
+        decompiled: '🔬 3,371 Funciones Decompiladas (decompiled/)',
+        docs: '📖 Índice y Documentación'
+      };
+      let html = '';
+      for (const cat of ['engine', 'include', 'decompiled', 'docs']) {
+        const group = filtered.filter(f => f.category === cat);
+        if (group.length === 0) continue;
+        html += `<div style="padding: 6px 12px; font-size: 11px; font-weight: 700; color: #ffa94d; background: rgba(255, 169, 77, 0.08); border-bottom: 1px solid var(--border);">${catNames[cat] || cat} (${group.length})</div>`;
+        for (const f of group) {
+          const active = f.path === CURRENT_CPP_PATH ? 'active' : '';
+          const kb = (f.size / 1024).toFixed(1);
+          html += `
+            <div class="list-item ${active}" onclick="selectCppFile('${f.path}')">
+              <div>
+                <div class="title" style="font-family: monospace; font-size: 12px;">${f.name}</div>
+                <div class="meta">${f.path}</div>
+              </div>
+              <span class="badge">${kb} KB</span>
+            </div>
+          `;
+        }
+      }
+      box.innerHTML = html;
+    }
+
+    async function selectCppFile(relPath) {
+      CURRENT_CPP_PATH = relPath;
+      renderCppFileList();
+      document.getElementById('cpp-current-path').textContent = `src_original/${relPath}`;
+      document.getElementById('cpp-code-pre').textContent = 'Cargando archivo C/C++...';
+      const res = await fetch(`/api/source_file?path=${encodeURIComponent(relPath)}`);
+      const data = await res.json();
+      CURRENT_CPP_CONTENT = data.content || '';
+      const lines = CURRENT_CPP_CONTENT.split('\n').length;
+      document.getElementById('cpp-current-meta').textContent = `${lines.toLocaleString()} líneas • ${(CURRENT_CPP_CONTENT.length / 1024).toFixed(1)} KB`;
+      document.getElementById('cpp-code-pre').textContent = CURRENT_CPP_CONTENT;
+      document.getElementById('cpp-code-pre').scrollTop = 0;
+    }
+
+    function findInCppViewer() {
+      const q = (document.getElementById('cpp-inline-search').value || '').trim();
+      const pre = document.getElementById('cpp-code-pre');
+      if (!q || !CURRENT_CPP_CONTENT) {
+        pre.textContent = CURRENT_CPP_CONTENT;
+        return;
+      }
+      const lines = CURRENT_CPP_CONTENT.split('\n');
+      const idx = lines.findIndex(l => l.toLowerCase().includes(q.toLowerCase()));
+      if (idx >= 0) {
+        const lineHeight = 19.375;
+        pre.scrollTop = Math.max(0, (idx - 5) * lineHeight);
+      }
     }
 
     initApp();

@@ -39,6 +39,20 @@ Suite completa de ingeniería inversa, extracción en Python puro y edición vis
 - **Desensamblador de Bytecode de Scripts de Mapa (`map_script_stream`, intérprete en `0x08004038`)**:
   - Desensambla los 132 flujos de opcodes (`0x00..0x1E`, tabla de despacho en `0x080554C0`).
 
+### 4. 💻 Código Fuente Original Reconstruido y Decompilado en C/C++ (`src_original/`)
+Se ha traducido el **100% del código ejecutable de la ROM (`3,371 funciones`, `303,190 bytes` de ARM7TDMI/Thumb y `571 VTables` de clases C++)** a código fuente C/C++ estructurado:
+- **`src_original/include/buusfury_types.hpp`**: Estructuras de datos completas del motor Webfoot (`Actor`, `ActorVTable`, `DamagePacket`, `EnemyStatRecord`, `MapEntry`, `MapRootRecord`, `DominantLayerRecord`, `PlacementRecord`, `SiblingObjectRecord`, `SpriteDefinition`, `MallocHeader`, registros hardware GBA `REG_DISPCNT`, `REG_DMA3*`, etc.).
+- **`src_original/include/classes_vtables.hpp`**: Las **571 Tablas de Métodos Virtuales (`VTables`)** de las clases C++ del juego (`0x080491F0..0x08057920`) con cada método virtual mapeado a su función y dirección ROM.
+- **`src_original/engine/` (Módulos Idiomáticos del Motor en C++)**:
+  - `battle_and_damage.cpp`: Sistema de combate, creación de enemigos (`Battle_CreateEnemy`), paquetes de daño (`Battle_SpawnDamageObject`), cálculo de daño físico/energía/críticos (`Battle_ComputeDamage`), aplicación de daño y estados (`Battle_ApplyDamage`) y barras de vida/Ki (`Gfx_BuildVitalBars`).
+  - `map_and_vram_loader.cpp`: Descompresor `WebfootLZ_Decompress` (`kinds 0, 1, 2`), cargador delta de bancos de tiles a VRAM (`Map_LoadTileBanksToVram` en `0x08009BD4`) y colisión de zonas warp (`Map_CheckWarpTransition`).
+  - `actors_npcs_objects.cpp`: Gestor de memoria Heap en EWRAM (`GBARam_Init`, `GBARam_Malloc`, `GBARam_Free`), fábrica de NPCs con eventos (`Npc_SpawnFromSiblingRecord`) y listas enlazadas de actores (`Object_Construct1`, `Object_AppendEntry1`).
+  - `script_vm_and_events.cpp`: Máquina virtual de scripts de eventos (`ScriptVM_ExecuteStream` en `0x08004038`), decodificador `ScriptVM_ReadVarint` y tabla de despacho de los 31 opcodes (`0x080554C0`).
+  - `hardware_gfx_bios.cpp`: Controladores de registros de hardware GBA (Blending, Scroll BG0..BG3, Mosaic, DMA3, Timers, interrupciones y wrappers BIOS `SWI`).
+  - `strings_table_utf16.cpp`: Las **1,524 cadenas de texto UTF-16LE** (`0x0805792C..0x0806D4E0`) exportadas como tabla C++.
+- **`src_original/decompiled/module_00..33.cpp`**: Las **3,371 funciones** de la ROM (`0x08000158..0x080554BC`) y rutinas críticas en IWRAM (`0x03004EC4..0x03005920`) decompiladas a C/C++ con resolución simbólica de literales PC-relative, llamadas virtuales `vtable`, registros hardware y constantes plegadas.
+- **Visor Integrado en el Studio**: Explora y busca cualquier función o módulo C/C++ directamente desde la pestaña **`💻 Código Original C/C++ (3,371 Func.)`** del editor web.
+
 ---
 
 ## 📁 Estructura del Repositorio
@@ -49,12 +63,19 @@ Suite completa de ingeniería inversa, extracción en Python puro y edición vis
 ├── README.md                           # Documentación general del proyecto
 ├── docs/
 │   └── ARQUITECTURA_TECNICA_BUUS_FURY.md # Especificación técnica completa de formatos y offsets
+├── src_original/                       # Código fuente original C/C++ reconstruido y decompilado
+│   ├── INDICE_CODIGO_ORIGINAL.md       # Índice maestro de la decompilación C/C++
+│   ├── include/                        # Cabeceras C++ (buusfury_types.hpp, classes_vtables.hpp)
+│   ├── engine/                         # Módulos principales del motor Webfoot en C++ legible
+│   └── decompiled/                     # 34 módulos C++ con las 3,371 funciones de la ROM
+├── tools_decompiler/
+│   └── decompile_rom_to_cpp.py         # Decompilador estático ARM7TDMI/Thumb -> C/C++
 ├── editor/
 │   ├── server.py                       # Backend HTTP + motor de renderizado y parcheo GBA
-│   └── index.html                      # Aplicación web Studio (Canvas HTML5 + Inspector)
+│   └── index.html                      # Aplicación web Studio (Canvas HTML5 + Inspector + Visor C++)
 └── buusfury-disasm/                    # Desensamblador simbólico y herramientas Webfoot
     ├── asm/                            # +2,900 archivos de ensamblador ARM7TDMI/Thumb
-    ├── src/                            # Código C/C++ decompilado (strings.cpp, GBARam.c, etc.)
+    ├── src/                            # Código C/C++ base (strings.cpp, GBARam.c, etc.)
     ├── include/                        # Cabeceras y definiciones
     └── tools/                          # Parsers binarios (webfoot_lz, mapcontainer, spritefamily, etc.)
 ```
