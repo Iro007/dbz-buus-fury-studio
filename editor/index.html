@@ -1838,7 +1838,10 @@
     async function loadCppSourceFiles() {
       const res = await fetch('/api/source_files');
       const data = await res.json();
-      CPP_FILES = data.files || [];
+      CPP_FILES = (data.files || []).map(f => ({
+        ...f,
+        path: f.path || f.rel_path || f.name
+      }));
       document.getElementById('cpp-file-count').textContent = `${CPP_FILES.length} archivos`;
       renderCppFileList();
       if (CPP_FILES.length > 0) {
@@ -1863,13 +1866,14 @@
         if (group.length === 0) continue;
         html += `<div style="padding: 6px 12px; font-size: 11px; font-weight: 700; color: #ffa94d; background: rgba(255, 169, 77, 0.08); border-bottom: 1px solid var(--border);">${catNames[cat] || cat} (${group.length})</div>`;
         for (const f of group) {
-          const active = f.path === CURRENT_CPP_PATH ? 'active' : '';
+          const fpath = f.path || f.rel_path || f.name;
+          const active = fpath === CURRENT_CPP_PATH ? 'active' : '';
           const kb = (f.size / 1024).toFixed(1);
           html += `
-            <div class="list-item ${active}" onclick="selectCppFile('${f.path}')">
+            <div class="list-item ${active}" onclick="selectCppFile('${fpath}')">
               <div>
                 <div class="title" style="font-family: monospace; font-size: 12px;">${f.name}</div>
-                <div class="meta">${f.path}</div>
+                <div class="meta">${fpath}</div>
               </div>
               <span class="badge">${kb} KB</span>
             </div>

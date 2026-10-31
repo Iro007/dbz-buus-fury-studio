@@ -1364,16 +1364,29 @@ class EditorHTTPHandler(BaseHTTPRequestHandler):
             if path == "/api/source_files":
                 src_root = os.path.join(WORKSPACE, "src_original")
                 files_list = []
+                idx_md = os.path.join(src_root, "INDICE_CODIGO_ORIGINAL.md")
+                if os.path.isfile(idx_md):
+                    files_list.append(
+                        {
+                            "path": "INDICE_CODIGO_ORIGINAL.md",
+                            "rel_path": "INDICE_CODIGO_ORIGINAL.md",
+                            "category": "docs",
+                            "name": "INDICE_CODIGO_ORIGINAL.md",
+                            "size": os.path.getsize(idx_md),
+                        }
+                    )
                 for sub in ("include", "engine", "decompiled"):
                     subdir = os.path.join(src_root, sub)
                     if not os.path.exists(subdir):
                         continue
                     for fname in sorted(os.listdir(subdir)):
-                        if fname.endswith((".hpp", ".h", ".cpp", ".c")):
+                        if fname.endswith((".hpp", ".h", ".cpp", ".c", ".md")):
                             full = os.path.join(subdir, fname)
+                            rel_p = f"{sub}/{fname}"
                             files_list.append(
                                 {
-                                    "rel_path": f"{sub}/{fname}",
+                                    "path": rel_p,
+                                    "rel_path": rel_p,
                                     "category": sub,
                                     "name": fname,
                                     "size": os.path.getsize(full),
